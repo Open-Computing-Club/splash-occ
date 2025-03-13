@@ -1,2 +1,2 @@
 # splash-occ
-![Video Title](splash.m4v)
+![Splash](splash.m4v)
