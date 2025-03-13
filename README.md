@@ -1,2 +1,2 @@
 # splash-occ
-![Splash](splash.m4v)
+![Splash](https://github.com/Open-Computing-Club/splash-occ/raw/refs/heads/main/splash.m4v)
