@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCC 3D Shutter Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            perspective: 1000px;
+        }
+        
+        .splash-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        /* 3D shutter container */
+        .shutter-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+            perspective: 1200px;
+        }
+        
+        /* Circle origin */
+        .circle-origin {
+            position: absolute;
+            width: 10vmin;
+            height: 10vmin;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 20;
+            transform: scale(1);
+            animation: pulseCircle 0.6s cubic-bezier(0.215, 0.610, 0.355, 1.000) 0.1s forwards;
+        }
+        
+        @keyframes pulseCircle {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.2);
+                opacity: 0;
+            }
+        }
+        
+        /* White background transition */
+        .white-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 15;
+            opacity: 0;
+            transform: scale(0);
+            border-radius: 50%;
+            animation: expandWhite 1s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+            animation-delay: 2.2s;
+        }
+        
+        @keyframes expandWhite {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+                border-radius: 50%;
+            }
+            20% {
+                opacity: 1;
+                border-radius: 50%;
+            }
+            100% {
+                transform: scale(5);
+                opacity: 1;
+                border-radius: 0;
+            }
+        }
+        
+        /* Shutter petals */
+        .shutter-petal-container {
+            position: absolute;
+            width: 0;
+            height: 0;
+            z-index: 10;
+            transform-style: preserve-3d;
+        }
+        
+        .shutter-petal {
+            position: absolute;
+            width: 0;
+            height: 0;
+            transform-origin: 0 0;
+            transform-style: preserve-3d;
+            animation: rotatePetal 1.4s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+        }
+        
+        /* Creating petals in a circle */
+        .shutter-petal::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 10vmin 20vmin 10vmin;
+            border-color: transparent transparent #fff transparent;
+            transform-origin: 50% 0;
+            transform: translateX(-10vmin) rotate(0deg);
+            animation: extendPetal 1.4s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards,
+                       fadePetal 0.4s ease-out forwards;
+            animation-delay: 0s, 1.2s;
+        }
+        
+        @keyframes rotatePetal {
+            0% {
+                transform: rotateZ(0deg) rotateX(0deg) rotateY(0deg) translateZ(0);
+            }
+            60% {
+                transform: rotateZ(var(--rotate-z)) rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) translateZ(150vmax);
+            }
+            100% {
+                transform: rotateZ(var(--rotate-z)) rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) translateZ(200vmax);
+            }
+        }
+        
+        @keyframes extendPetal {
+            0% {
+                border-width: 0 10vmin 0 10vmin;
+                opacity: 0.9;
+            }
+            60% {
+                border-width: 0 10vmin 100vmin 10vmin;
+                opacity: 0.7;
+            }
+            100% {
+                border-width: 0 10vmin 120vmin 10vmin;
+                opacity: 0;
+            }
+        }
+        
+        @keyframes fadePetal {
+            0% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        
+        /* Text containers */
+        .text-container {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+            opacity: 0;
+            transform: scale(0.8);
+            will-change: opacity, transform;
+        }
+        
+        .pursuit-container {
+            animation: fadeInPursuit 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards,
+                      fadeOutPursuit 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+            animation-delay: 0.8s, 2.2s;
+        }
+        
+        .occ-container {
+            animation: fadeInOCC 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+            animation-delay: 2.8s;
+            z-index: 30;
+        }
+        
+        @keyframes fadeInPursuit {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes fadeOutPursuit {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes fadeInOCC {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .pursuit-text {
+            font-size: 3vw;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            white-space: nowrap;
+            color: #fff;
+        }
+        
+        .occ-text {
+            font-size: 10vw;
+            letter-spacing: 0.1em;
+            line-height: 1;
+            margin-bottom: 1vh;
+            color: #000;
+        }
+        
+        .club-text {
+            font-size: 2vw;
+            letter-spacing: 0.2em;
+            color: #000;
+        }
+        
+        
+        
+        /* Visual effects */
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, transparent 50%, rgba(0, 255, 255, 0.05) 50%, transparent 51%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.2;
+        }
+        
+        .noise {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAA+VBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9BnGuhAAAAUnRSTlMAAgMEBQYICQsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRnQjQxwAAAspJREFUWMPtmOd24kAMgJe2LDC9htpCT0hCSAhp9N7//+8OZgz2krnrhb2Hb+94bY++GWlkCcLV1dXV1X8QL16sB+Pxejd4sYhduLvfD0aj0WC/v0u5MySbW1PkYfYFqB0naiWbfvgypPOLXKHnvb0BWJgYQpzN3jBv7ekM6WrGnxAO+WLYo+8aQWvWSNOLg+w8oT/itemsN+bAYEx7BrZzRtvevCoBfvSSUYuuhVJ8ugB8CU4tOlmU4sMFCFIvEo3pIsYXIMikmHtOwRcgMHuRGM4WccsXICPvRaI3XdRxX4Bg7kVjPJlI/ue5rZcjdSpiY+/udlR+L1JO/rwAVpTfJXl18QPwRfldohmfXgB+CbaPPK8HgGHsGZWb/XMCrFL2zxb8wAUQ9s8I/NQHEGS7UdmqIPRsQKzxEoCVH5QdMyQbJYwXAIA+FsCXeZOei2g50NAh3OYiOaYXFBEBLrKZgJPzDzk5DjZeWJxcbpKzY8VhXBwvttwk4+XZcMxxcgEvNynAzcQGtBtOLv45pDdLMiBf4eTS/YCIA4vb4uRufgJGe1qCnUsTHwB47fGijZS7xEcA3vJYOUo5h24A6L7GySX9BIQuBOSYy0G3AOifY5zTffwAwAM4p7v4CQCRv0h7/icAPt+Lsht/AkDrHivXVALALY+XeyoBYC/x2AByA4DxKpnMXAkAh8SvXADQNVYu1gLA47eObSkBWH9JJrleEpyUPb6g5Ea+5IcQb4/9fkgQvl20BGeH/XlLpJwcCdQPWs7jB0C7x8hV9AD0m4xciQDou6qQK3EAbYGRk7MI7emRkZMjQD9MG5ycnwXoNSzHySk4b6A/bzjZJDnQ67UQJ+cLQD+ddjk5RQZ6EbHJyakJEP2j2OXk5H3UrwpNXk5uQl+xLV5OfoP4jrXhcXJKuEd9Sm/xckqwQH1I7/Jy8g7qe0CJlVNOD1BfNC6urq6urv6L/AV3J6nQiLCECQAAAABJRU5ErkJggg==');
+            opacity: 0.05;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        /* Fade out entire splash screen */
+        .splash-container {
+            animation: fadeOutSplash 1s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+            animation-delay: 5s;
+        }
+        
+        @keyframes fadeOutSplash {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-container">
+        <!-- Central circle and shutter petals -->
+        <div class="shutter-container" id="shutterContainer">
+            <div class="circle-origin"></div>
+            <!-- Petals will be dynamically created -->
+        </div>
+        
+        <!-- White background transition -->
+        <div class="white-bg"></div>
+        
+        <!-- Text content -->
+        <div class="text-container pursuit-container">
+            <div class="pursuit-text">In pursuit for greatness</div>
+        </div>
+        
+        <div class="text-container occ-container">
+            <div class="occ-text">OCC</div>
+            <div class="club-text">Open Computer Club</div>
+        </div>
+        
+        
+        <!-- Visual effects -->
+        <div class="scanline"></div>
+        <div class="noise"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const shutterContainer = document.getElementById('shutterContainer');
+            
+            // Create shutter petals
+            const petalCount = 16; // More petals for smoother effect
+            
+            for (let i = 0; i < petalCount; i++) {
+                // Calculate rotation angle with slight offset for more natural look
+                const angle = (i / petalCount) * 360 + (Math.random() * 3 - 1.5);
+                
+                // Create container for each petal
+                const petalContainer = document.createElement('div');
+                petalContainer.className = 'shutter-petal-container';
+                petalContainer.style.transform = `rotate(${angle}deg)`;
+                
+                // Create the petal with 3D rotation
+                const petal = document.createElement('div');
+                petal.className = 'shutter-petal';
+                
+                // Set custom 3D rotation properties with smoother, more varied movements
+                petal.style.setProperty('--rotate-z', `${angle}deg`);
+                petal.style.setProperty('--rotate-x', `${15 + Math.random() * 25}deg`);
+                petal.style.setProperty('--rotate-y', `${-15 + Math.random() * 30}deg`);
+                
+                // Add staggered delay with smoother distribution
+                petal.style.animationDelay = `${0.05 + (i * 0.02)}s`;
+                
+                // Set fade delay with slight variation for natural effect
+                const fadeDelay = 1.2 + (i * 0.01) + (Math.random() * 0.05);
+                petal.querySelector ? 
+                    petal.querySelector('::before').style.animationDelay = `0s, ${fadeDelay}s` : 
+                    petal.style.setProperty('--fade-delay', `${fadeDelay}s`);
+                
+                // Add the petal to its container
+                petalContainer.appendChild(petal);
+                
+                // Add container to the shutter container
+                shutterContainer.appendChild(petalContainer);
+                
+                // Remove from DOM after animation completes to save memory
+                setTimeout(() => {
+                    petalContainer.style.display = 'none';
+                }, 2500);
+            }
+            
+            
+        });
+    </script>
+</body>
+</html>
